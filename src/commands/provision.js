@@ -33,6 +33,11 @@ const cmd = new Command('provision')
             privateKey: cfg.server.pem && fs.readFileSync(cfg.server.pem).toString()
         });
 
+        if (opts.force) {
+            console.log(chalk.yellow('Force mode: wiping old deploy folders'));
+            await ssh.execCommand(`sudo rm -rf ${cfg.app.deployPath}/*`);
+        }
+
         // ensure /opt/ship-next exists and upload scripts
         await ssh.execCommand('sudo mkdir -p /opt/ship-next && sudo chown $USER:$USER /opt/ship-next');
         await ssh.putFile(localScript, '/opt/ship-next/provision.sh');

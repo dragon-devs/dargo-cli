@@ -1,10 +1,15 @@
-import { Command } from 'commander';
+import {Command} from 'commander';
 import chalk from 'chalk';
-import { NodeSSH } from 'node-ssh';
-import { readConfig } from '../utils/config.js';
+import {NodeSSH} from 'node-ssh';
+import {readConfig} from '../utils/config.js';
 import fs from 'fs-extra';
+import {fileURLToPath} from 'url';
+import path from 'path';
 
 const ssh = new NodeSSH();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rollbackLocal = path.join(__dirname, '../../templates/rollback.sh');
+
 
 const cmd = new Command('rollback')
     .description('Rollback remote to previous release')
@@ -19,7 +24,7 @@ const cmd = new Command('rollback')
         });
 
         // upload rollback script if missing
-        await ssh.putFile('templates/rollback.sh', '/opt/ship-next/rollback.sh');
+        await ssh.putFile(rollbackLocal, '/opt/ship-next/rollback.sh');
         await ssh.execCommand('chmod +x /opt/ship-next/rollback.sh');
 
         const cmdStr = `bash /opt/ship-next/rollback.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.pm2AppName}`;
