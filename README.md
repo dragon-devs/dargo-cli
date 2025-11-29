@@ -156,7 +156,7 @@ Restart your app on the server (useful after env changes).
 
 ```
 /var/www/your-app/
-├── current -> releases/your-app-v1.0.0-abc123/
+├── current -> releases/your-app-v1.0.0-abc123/  (symlink to active release)
 ├── releases/
 │   ├── your-app-v1.0.0-abc123/
 │   ├── your-app-v0.9.0-xyz789/
@@ -165,6 +165,16 @@ Restart your app on the server (useful after env changes).
     ├── .env
     └── ecosystem.config.js
 ```
+
+**How the `current` Symlink Works:**
+- Your app **always runs from `/current`**, which is a symbolic link
+- During deployment, we create a new release directory, then atomically update the symlink
+- This is the industry-standard approach (used by Capistrano, Deployer, etc.)
+- **Why it's stable:**
+  - Symlink updates are atomic operations (all-or-nothing)
+  - PM2 tracks the process, not the directory path
+  - Old version keeps running until PM2 restarts
+  - If anything fails, the old symlink remains intact
 
 ### How It Works
 
@@ -245,4 +255,4 @@ ISC
 
 ## Author
 
-Salman Khan
+Salman Khan by dragondevs.co

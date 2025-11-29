@@ -18,9 +18,10 @@ fi
 
 mkdir -p "$RELEASES_DIR"
 
-# Create unique release directory
+# Extract release name from archive filename (e.g., app-v1.0.0-abc123.tar.gz -> app-v1.0.0-abc123)
+ARCHIVE_BASENAME=$(basename "$ARCHIVE" .tar.gz)
 TIMESTAMP=$(date +%s)
-TEMP_DIR="$RELEASES_DIR/${APP_NAME}-temp-$TIMESTAMP"
+TEMP_DIR="$RELEASES_DIR/${ARCHIVE_BASENAME}-temp-$TIMESTAMP"
 
 echo "== Creating temp directory: $TEMP_DIR =="
 rm -rf "$TEMP_DIR"
@@ -39,8 +40,8 @@ fi
 
 pnpm install --prod --frozen-lockfile=false
 
-# Promote temp folder into final release
-FINAL_RELEASE="$RELEASES_DIR/${APP_NAME}-${TIMESTAMP}"
+# Promote temp folder into final release using the archive name
+FINAL_RELEASE="$RELEASES_DIR/${ARCHIVE_BASENAME}"
 mv "$TEMP_DIR" "$FINAL_RELEASE"
 
 echo "== Linking shared .env =="

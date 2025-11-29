@@ -36,7 +36,17 @@ const cmd = new Command('rollback')
             return;
         }
 
-        const releases = res.stdout.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+        // Get current release
+        const currentRes = await ssh.execCommand(`readlink -f ${cfg.app.deployPath}/current`);
+        const currentRelease = currentRes.stdout.trim().split('/').pop();
+
+        // Filter and parse releases
+        const allReleases = res.stdout.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+
+        // Filter out .tar.gz files and temp directories
+        const releases = allReleases.filter(r => {
+            return !r.endsWith('.tar.gz') && !r.includes('-temp-');
+        });
 
         if (releases.length === 0) {
             console.log(chalk.yellow('No releases found.'));
@@ -44,11 +54,55 @@ const cmd = new Command('rollback')
             return;
         }
 
+        // Parse and format releases
+        const formatRelease = (releaseName, isCurrent) => {
+            // Try to extract version from name (e.g., app-v1.0.0-abc123)
+            const versionMatch = releaseName.match(/-v([\d.]+)-([a-z0-9]+)$/);
+
+            if (versionMatch) {
+                const version = versionMatch[1];
+                const trackingId = versionMatch[2];
+
+                if (isCurrent) {
+                    return `${chalk.green('● CURRENT')} ${chalk.cyan(`v${version}`)} ${chalk.gray(`(${trackingId})`)}`;
+                } else {
+                    return `  ${chalk.cyan(`v${version}`)} ${chalk.gray(`(${trackingId})`)}`;
+                }
+            } else {
+                // Fallback for old format releases
+                if (isCurrent) {
+                    return `${chalk.green('● CURRENT')} ${chalk.gray(releaseName)}`;
+                } else {
+                    return `  ${chalk.gray(releaseName)}`;
+                }
+            }
+        };
+
+        // Create choices with formatted titles
+        const choices = releases.map((r, index) => {
+            const isCurrent = r === currentRelease;
+            const isLatest = index === 0 && !isCurrent;
+
+            let title = formatRelease(r, isCurrent);
+
+            if (isLatest) {
+                title = `${chalk.yellow('★ LATEST')} ${title.trim()}`;
+            }
+
+            return {
+                title,
+                value: r,
+                description: isCurrent ? 'Currently deployed' : (isLatest ? 'Most recent release' : '')
+            };
+        });
+
+        console.log(chalk.blue('\nAvailable releases:\n'));
+
         const response = await prompts({
             type: 'select',
             name: 'value',
             message: 'Select a release to rollback to:',
-            choices: releases.map(r => ({ title: r, value: r })),
+            choices,
             initial: 0
         });
 
@@ -59,6 +113,14 @@ const cmd = new Command('rollback')
         }
 
         const targetRelease = response.value;
+
+        // Check if user selected current release
+        if (targetRelease === currentRelease) {
+            console.log(chalk.yellow('Selected release is already the current one. No action needed.'));
+            ssh.dispose();
+            return;
+        }
+
         console.log(chalk.blue(`Rolling back to: ${targetRelease}`));
 
         // upload rollback script if missing
@@ -75,8 +137,9 @@ const cmd = new Command('rollback')
             onStdout: (chunk) => process.stdout.write(chunk.toString('utf8')),
             onStderr: (chunk) => process.stderr.write(chunk.toString('utf8'))
         });
-
         console.log(chalk.magenta('---------------------------------------------------'));
+        console.log(chalk.green('Rollback finished successfully!'));
+        console.log(chalk.cyanBright(`\nYour app is live at: https://${cfg.app.name}\n`));
         ssh.dispose();
     });
 
