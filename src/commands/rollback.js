@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import prompts from 'prompts';
+import ora from 'ora';
 
 const ssh = new NodeSSH();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,20 +19,23 @@ const cmd = new Command('rollback')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 
-        console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}...`));
+        const connectSpinner = ora(`Connecting to ${cfg.server.user}@${cfg.server.host}...`).start();
         await ssh.connect({
             host: cfg.server.host,
             port: cfg.server.port || 22,
             username: cfg.server.user,
             privateKey: cfg.server.pem && fs.readFileSync(cfg.server.pem).toString()
         });
+        connectSpinner.succeed(`Connected to ${chalk.cyan(cfg.server.host)}`);
 
         // List releases
+        const listSpinner = ora('Fetching available releases...').start();
         const releasesPath = `${cfg.app.deployPath}/releases`;
         const res = await ssh.execCommand(`ls -1t ${releasesPath}`);
 
         if (res.stderr) {
-            console.error(chalk.red('Failed to list releases:'), res.stderr);
+            listSpinner.fail('Failed to list releases');
+            console.error(chalk.red(res.stderr));
             ssh.dispose();
             return;
         }
@@ -49,10 +53,12 @@ const cmd = new Command('rollback')
         });
 
         if (releases.length === 0) {
-            console.log(chalk.yellow('No releases found.'));
+            listSpinner.fail('No releases found');
             ssh.dispose();
             return;
         }
+
+        listSpinner.succeed(`Found ${chalk.cyan(releases.length)} release${releases.length > 1 ? 's' : ''}`);
 
         // Parse and format releases
         const formatRelease = (releaseName, isCurrent) => {
@@ -121,11 +127,14 @@ const cmd = new Command('rollback')
             return;
         }
 
-        console.log(chalk.blue(`Rolling back to: ${targetRelease}`));
-
+        const uploadSpinner = ora('Uploading rollback script...').start();
         // upload rollback script if missing
         await ssh.putFile(rollbackLocal, '/opt/dargo/rollback.sh');
         await ssh.execCommand('chmod +x /opt/dargo/rollback.sh');
+        uploadSpinner.succeed('Rollback script ready');
+
+        const rollbackSpinner = ora(`Rolling back to ${chalk.cyan(targetRelease)}...`).start();
+        rollbackSpinner.stop();
 
         const cmdStr = `bash /opt/dargo/rollback.sh "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${targetRelease}"`;
 
@@ -138,8 +147,10 @@ const cmd = new Command('rollback')
             onStderr: (chunk) => process.stderr.write(chunk.toString('utf8'))
         });
         console.log(chalk.magenta('---------------------------------------------------'));
-        console.log(chalk.green('Rollback finished successfully!'));
-        console.log(chalk.cyanBright(`\nYour app is live at: https://${cfg.app.name}\n`));
+
+        const successSpinner = ora().start();
+        successSpinner.succeed(chalk.green.bold('Rollback finished successfully!'));
+        console.log(chalk.cyanBright(`\n🚀 Your app is live at: https://${cfg.app.name}\n`));
         ssh.dispose();
     });
 

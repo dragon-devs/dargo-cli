@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { NodeSSH } from 'node-ssh';
 import chalk from 'chalk';
+import ora from 'ora';
 import fs from 'fs-extra';
 import { readConfig } from '../utils/config.js';
 
@@ -12,13 +13,19 @@ const cmd = new Command('restart')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 
-        console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}...`));
+        const connectSpinner = ora(`Connecting to ${cfg.server.user}@${cfg.server.host}...`).start();
+
         await ssh.connect({
             host: cfg.server.host,
             port: cfg.server.port || 22,
             username: cfg.server.user,
             privateKey: cfg.server.pem && fs.readFileSync(cfg.server.pem).toString()
         });
+
+        connectSpinner.succeed(`Connected to ${chalk.cyan(cfg.server.host)}`);
+
+        const restartSpinner = ora('Restarting application...').start();
+        restartSpinner.stop();
 
         console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.magenta(` RESTARTING ${cfg.app.pm2AppName} `));
@@ -30,7 +37,10 @@ const cmd = new Command('restart')
         });
 
         console.log(chalk.magenta('---------------------------------------------------'));
-        console.log(chalk.green('App restarted successfully.'));
+
+        const successSpinner = ora().start();
+        successSpinner.succeed(chalk.green.bold('App restarted successfully!'));
+
         ssh.dispose();
     });
 

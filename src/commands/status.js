@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { NodeSSH } from 'node-ssh';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import ora from 'ora';
 import { readConfig } from '../utils/config.js';
 
 const ssh = new NodeSSH();
@@ -12,13 +13,17 @@ const cmd = new Command('status')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 
-        console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}...`));
+        const connectSpinner = ora(`Connecting to ${cfg.server.user}@${cfg.server.host}...`).start();
         await ssh.connect({
             host: cfg.server.host,
             port: cfg.server.port || 22,
             username: cfg.server.user,
             privateKey: cfg.server.pem && fs.readFileSync(cfg.server.pem).toString()
         });
+        connectSpinner.succeed(`Connected to ${chalk.cyan(cfg.server.host)}`);
+
+        const statusSpinner = ora('Fetching app status...').start();
+        statusSpinner.stop();
 
         console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.magenta(` APP STATUS: ${cfg.app.pm2AppName} `));

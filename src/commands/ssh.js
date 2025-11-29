@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { spawn } from 'child_process';
 import chalk from 'chalk';
+import ora from 'ora';
 import fs from 'fs-extra';
 import { readConfig } from '../utils/config.js';
 
@@ -10,8 +11,7 @@ const cmd = new Command('ssh')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 
-        console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}...`));
-        console.log(chalk.gray('Type "exit" to disconnect\n'));
+        const connectSpinner = ora(`Connecting to ${cfg.server.user}@${cfg.server.host}...`).start();
 
         const sshArgs = [
             `${cfg.server.user}@${cfg.server.host}`,
@@ -22,6 +22,9 @@ const cmd = new Command('ssh')
             sshArgs.push('-i', cfg.server.pem);
         }
 
+        connectSpinner.succeed(`Connected to ${chalk.cyan(cfg.server.host)}`);
+        console.log(chalk.gray('Type "exit" to disconnect\n'));
+
         const sshProcess = spawn('ssh', sshArgs, {
             stdio: 'inherit',
             shell: true
@@ -29,14 +32,17 @@ const cmd = new Command('ssh')
 
         sshProcess.on('exit', (code) => {
             if (code === 0) {
-                console.log(chalk.green('\nSSH session closed.'));
+                const exitSpinner = ora().start();
+                exitSpinner.succeed(chalk.green('SSH session closed'));
             } else {
-                console.log(chalk.yellow(`\nSSH session closed with code ${code}.`));
+                const exitSpinner = ora().start();
+                exitSpinner.warn(chalk.yellow(`SSH session closed with code ${code}`));
             }
         });
 
         sshProcess.on('error', (err) => {
-            console.error(chalk.red('Failed to start SSH:'), err.message);
+            const errorSpinner = ora().start();
+            errorSpinner.fail(chalk.red(`Failed to start SSH: ${err.message}`));
             console.log(chalk.yellow('\nMake sure SSH is installed on your system.'));
         });
     });

@@ -5,6 +5,7 @@ import os from 'os';
 import { NodeSSH } from 'node-ssh';
 import archiver from 'archiver';
 import chalk from 'chalk';
+import ora from 'ora';
 import { readConfig } from '../utils/config.js';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -64,21 +65,25 @@ const cmd = new Command('deploy')
         const version = pkg.version || '0.0.0';
 
         if (opts.build) {
-            console.log(chalk.blue('Installing and building locally (pnpm install && pnpm build)...'));
+            const buildSpinner = ora('Installing dependencies...').start();
             spawnSync('pnpm', ['install'], { stdio: 'inherit', shell: true });
+            buildSpinner.succeed('Dependencies installed');
+
+            const compileSpinner = ora('Building Next.js application...').start();
             spawnSync('pnpm', ['build'], { stdio: 'inherit', shell: true });
+            compileSpinner.succeed('Build completed');
         } else {
-            console.log(chalk.yellow('Skipping build (--no-build).'));
+            console.log(chalk.yellow('⚠ Skipping build (--no-build).'));
         }
 
-        console.log(chalk.blue('Packaging release...'));
+        const archiveSpinner = ora('Packaging release archive...').start();
 
         // Create archive with new naming convention: appName-vVersion-TrackingId.tar.gz
         const archiveName = `${cfg.app.name}-v${version}-${trackingId}.tar.gz`;
         const archivePath = await createReleaseArchive(cfg, archiveName);
-        console.log(chalk.green(`Archive created: ${archivePath}`));
+        archiveSpinner.succeed(`Archive created: ${chalk.cyan(archiveName)}`);
 
-        console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}`));
+        const connectSpinner = ora(`Connecting to ${cfg.server.user}@${cfg.server.host}...`).start();
 
         await ssh.connect({
             host: cfg.server.host,
@@ -86,22 +91,29 @@ const cmd = new Command('deploy')
             username: cfg.server.user,
             privateKey: cfg.server.pem && fs.readFileSync(cfg.server.pem).toString()
         });
+        connectSpinner.succeed(`Connected to ${chalk.cyan(cfg.server.host)}`);
 
+        const setupSpinner = ora('Preparing remote directories...').start();
         const remoteReleases = `${cfg.app.deployPath}/releases`;
         await ssh.execCommand(`sudo mkdir -p ${remoteReleases} && sudo chown -R $USER:$USER ${cfg.app.deployPath}`);
+        setupSpinner.succeed('Remote directories ready');
 
         const remoteArchive = `${remoteReleases}/${path.basename(archivePath)}`;
 
-        console.log(chalk.blue(`Uploading archive to ${remoteArchive}`));
+        const uploadSpinner = ora('Uploading archive to server...').start();
         await ssh.putFile(archivePath, remoteArchive);
+        uploadSpinner.succeed('Archive uploaded successfully');
 
         const __dirname = path.dirname(fileURLToPath(import.meta.url));
         const localReleaseScript = path.join(__dirname, '../../templates/release.sh');
 
+        const scriptSpinner = ora('Uploading release script...').start();
         await ssh.putFile(localReleaseScript, '/opt/dargo/release.sh');
         await ssh.execCommand('chmod +x /opt/dargo/release.sh');
+        scriptSpinner.succeed('Release script ready');
 
-        console.log(chalk.blue('Triggering remote release.sh'));
+        const deploySpinner = ora('Deploying application...').start();
+        deploySpinner.stop();
 
         // Pass the archive name (without extension) as the release folder name if needed, 
         // but release.sh currently handles extraction to a temp folder. 
@@ -119,11 +131,14 @@ const cmd = new Command('deploy')
 
         console.log(chalk.magenta('---------------------------------------------------'));
 
-        console.log(chalk.green('Deploy finished successfully!'));
-        console.log(chalk.cyanBright(`\nYour app is live at: https://${cfg.app.name}\n`));
+        const successSpinner = ora().start();
+        successSpinner.succeed(chalk.green.bold('Deploy finished successfully!'));
+        console.log(chalk.cyanBright(`\n🚀 Your app is live at: https://${cfg.app.name}\n`));
 
+        const cleanupSpinner = ora('Cleaning up local files...').start();
         ssh.dispose();
         await fs.remove(archivePath).catch(() => { });
+        cleanupSpinner.succeed('Cleanup completed');
     });
 
 export default cmd;
