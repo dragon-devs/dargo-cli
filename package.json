@@ -1,11 +1,11 @@
 {
-  "name": "ship-next",
+  "name": "dargo",
   "version": "1.0.0",
-  "description": "",
+  "description": "Lightning-fast Next.js deployment tool for VPS with automatic SSL",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "ship-next": "bin/index.js"
+    "dargo": "bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

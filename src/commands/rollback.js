@@ -14,7 +14,7 @@ const rollbackLocal = path.join(__dirname, '../../templates/rollback.sh');
 
 const cmd = new Command('rollback')
     .description('Rollback remote to previous release')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 

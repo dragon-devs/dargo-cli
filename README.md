@@ -1,6 +1,8 @@
-# ship-next
+# dargo
 
-A lightweight, powerful deployment tool for Next.js applications to Debian-based VPS servers with automatic SSL, environment management, and zero-downtime deployments.
+> **Lightning-fast Next.js deployment to any VPS** - One command to ship with SSL, zero-downtime, and automatic rollbacks.
+
+A powerful, minimalist deployment tool for Next.js applications to Debian-based VPS servers with automatic SSL, environment management, and zero-downtime deployments.
 
 ## Features
 
@@ -16,9 +18,9 @@ A lightweight, powerful deployment tool for Next.js applications to Debian-based
 ## Installation
 
 ```bash
-npm install -g ship-next
+npm install -g dargo
 # or
-pnpm add -g ship-next
+pnpm add -g dargo
 ```
 
 ## Quick Start
@@ -26,10 +28,10 @@ pnpm add -g ship-next
 ### 1. Initialize Configuration
 
 ```bash
-ship-next init
+dargo init
 ```
 
-This creates a `shipnext.config.json` file. Edit it with your server details:
+This creates a `dargo.config.json` file. Edit it with your server details:
 
 ```json
 {
@@ -55,7 +57,7 @@ This creates a `shipnext.config.json` file. Edit it with your server details:
 Run this once to set up your server with Node.js, PM2, Nginx, SSL, and firewall:
 
 ```bash
-ship-next provision
+dargo provision
 ```
 
 This will:
@@ -69,13 +71,13 @@ This will:
 Create a `.env.production` file locally, then push it to the server:
 
 ```bash
-ship-next env push
+dargo env push
 ```
 
 ### 4. Deploy Your App
 
 ```bash
-ship-next deploy
+dargo deploy
 ```
 
 This will:
@@ -91,27 +93,27 @@ This will:
 
 ### Core Commands
 
-#### `ship-next init`
+#### `dargo init`
 Create a configuration file in the current directory.
 
-#### `ship-next provision [options]`
+#### `dargo provision [options]`
 Bootstrap your Debian server (run once).
 
 **Options:**
 - `-f, --force` - Force overwrite of nginx, ecosystem, and deploy structure
 
-#### `ship-next deploy [options]`
+#### `dargo deploy [options]`
 Build and deploy your Next.js app.
 
 **Options:**
 - `--no-build` - Skip running pnpm build (use existing build)
 
-#### `ship-next rollback`
+#### `dargo rollback`
 Interactive rollback to a previous release. Shows a list of available releases to choose from.
 
 ### Management Commands
 
-#### `ship-next env <action> [options]`
+#### `dargo env <action> [options]`
 Manage environment variables on the server.
 
 **Actions:**
@@ -124,16 +126,16 @@ Manage environment variables on the server.
 **Examples:**
 ```bash
 # Push .env.production to server
-ship-next env push
+dargo env push
 
 # Push a different file
-ship-next env push -f .env.staging
+dargo env push -f .env.staging
 
 # Pull server env to local file
-ship-next env pull
+dargo env pull
 ```
 
-#### `ship-next logs [options]`
+#### `dargo logs [options]`
 View PM2 logs from the server.
 
 **Options:**
@@ -141,21 +143,21 @@ View PM2 logs from the server.
 
 **Example:**
 ```bash
-ship-next logs -n 200
+dargo logs -n 200
 ```
 
-#### `ship-next status`
+#### `dargo status`
 Check the current status of your app on the server.
 
-#### `ship-next restart`
+#### `dargo restart`
 Restart your app on the server (useful after env changes).
 
-#### `ship-next ssh`
+#### `dargo ssh`
 Connect directly to your server via SSH using the credentials from your config file.
 
 **Example:**
 ```bash
-ship-next ssh
+dargo ssh
 ```
 
 This opens an interactive SSH session. Type `exit` to disconnect.
@@ -224,33 +226,33 @@ This makes it easy to identify and rollback to specific versions.
 Environment variables are stored in `/var/www/your-app/shared/.env` and symlinked to each release. This means:
 - Env vars persist across deployments
 - You can update them without redeploying
-- Use `ship-next env push` to update and `ship-next restart` to apply changes
+- Use `dargo env push` to update and `dargo restart` to apply changes
 
 ## Troubleshooting
 
 ### View logs
 ```bash
-ship-next logs
+dargo logs
 ```
 
 ### Check app status
 ```bash
-ship-next status
+dargo status
 ```
 
 ### Restart app
 ```bash
-ship-next restart
+dargo restart
 ```
 
 ### Rollback to previous version
 ```bash
-ship-next rollback
+dargo rollback
 ```
 
 ### Re-provision server
 ```bash
-ship-next provision --force
+dargo provision --force
 ```
 
 ## Requirements

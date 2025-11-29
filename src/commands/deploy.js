@@ -41,7 +41,7 @@ async function createReleaseArchive(cfg, archiveName) {
 
 const cmd = new Command('deploy')
     .description('Build local Next.js and deploy to configured server')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .option('--no-build', 'skip running pnpm build')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);

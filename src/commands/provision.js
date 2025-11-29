@@ -12,7 +12,7 @@ const root = path.join(__dirname, '..', '..');
 
 const cmd = new Command('provision')
     .description('Bootstrap Debian server (run once)')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .option('-f, --force', 'force overwrite of nginx + ecosystem + deploy structure')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);

@@ -21,11 +21,11 @@ const sample = {
 };
 
 const cmd = new Command('init')
-    .description('Create shipnext.config.json in current folder')
+    .description('Create dargo.config.json in current folder')
     .action(async () => {
-        const dest = path.resolve(process.cwd(), 'shipnext.config.json');
+        const dest = path.resolve(process.cwd(), 'dargo.config.json');
         if (await fs.pathExists(dest)) {
-            console.log(chalk.yellow('shipnext.config.json already exists — aborting.'));
+            console.log(chalk.yellow('dargo.config.json already exists — aborting.'));
             process.exit(1);
         }
         await fs.writeJSON(dest, sample, { spaces: 2 });

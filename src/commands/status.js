@@ -8,7 +8,7 @@ const ssh = new NodeSSH();
 
 const cmd = new Command('status')
     .description('Check app status on the server')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
 

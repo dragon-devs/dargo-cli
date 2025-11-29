@@ -10,7 +10,7 @@ const ssh = new NodeSSH();
 const cmd = new Command('env')
     .description('Manage remote environment variables')
     .argument('<action>', 'push | pull')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .option('-f, --file <path>', 'local env file to push (default: .env.production)', '.env.production')
     .action(async (action, opts) => {
         const cfg = readConfig(opts.config);

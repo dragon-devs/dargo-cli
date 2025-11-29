@@ -8,7 +8,7 @@ const ssh = new NodeSSH();
 
 const cmd = new Command('logs')
     .description('View server logs (PM2)')
-    .option('-c, --config <path>', 'path to shipnext.config.json', 'shipnext.config.json')
+    .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .option('-n, --lines <number>', 'number of lines to show', '15')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
