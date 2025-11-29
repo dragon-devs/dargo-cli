@@ -32,15 +32,22 @@ tar -xzf "$ARCHIVE" -C "$TEMP_DIR"
 echo "== Installing production dependencies =="
 cd "$TEMP_DIR"
 
-if command -v pnpm >/dev/null 2>&1; then
-    pnpm install --prod --frozen-lockfile=false || npm install --omit=dev
-else
-    npm install --omit=dev
+if ! command -v pnpm >/dev/null 2>&1; then
+    echo "Error: pnpm is not installed on the server. Please run provision again."
+    exit 1
 fi
+
+pnpm install --prod --frozen-lockfile=false
 
 # Promote temp folder into final release
 FINAL_RELEASE="$RELEASES_DIR/${APP_NAME}-${TIMESTAMP}"
 mv "$TEMP_DIR" "$FINAL_RELEASE"
+
+echo "== Linking shared .env =="
+if [ -f "$DEPLOY_PATH/shared/.env" ]; then
+    ln -sf "$DEPLOY_PATH/shared/.env" "$FINAL_RELEASE/.env"
+    ln -sf "$DEPLOY_PATH/shared/.env" "$FINAL_RELEASE/.env.production"
+fi
 
 echo "== Updating current symlink =="
 rm -f "$CURRENT_SYMLINK"
@@ -50,7 +57,7 @@ echo "== Restarting PM2 cleanly =="
 
 # Always restart fresh (safer for Next.js)
 pm2 delete "$PM2_NAME" 2>/dev/null || true
-pm2 start npm --name "$PM2_NAME" -- start
+pm2 start pnpm --name "$PM2_NAME" -- start
 pm2 save
 
 echo "== Cleaning old releases (keeping $KEEP_RELEASES) =="

@@ -32,9 +32,13 @@ if ! command -v node >/dev/null 2>&1; then
   sudo apt-get install -y nodejs build-essential
 fi
 
-# install pm2
+# install pm2 and pnpm
 if ! command -v pm2 >/dev/null 2>&1; then
   sudo npm install -g pm2
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  sudo npm install -g pnpm
 fi
 
 # install nginx
@@ -70,7 +74,7 @@ module.exports = {
   apps: [{
     name: '${APP}',
     cwd: '${DEPLOY_PATH}/current',
-    script: 'npm',
+    script: 'pnpm',
     args: 'start',
     env: {
       NODE_ENV: 'production',

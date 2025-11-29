@@ -11,11 +11,8 @@ import { fileURLToPath } from 'url';
 
 const ssh = new NodeSSH();
 
-async function createReleaseArchive(cfg) {
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    const name = `${cfg.app.name}-${ts}.tar.gz`;
-
-    const outArchive = path.resolve(process.cwd(), name);
+async function createReleaseArchive(cfg, archiveName) {
+    const outArchive = path.resolve(process.cwd(), archiveName);
 
     const output = fs.createWriteStream(outArchive);
     const archive = archiver('tar', { gzip: true });
@@ -48,6 +45,11 @@ const cmd = new Command('deploy')
     .option('--no-build', 'skip running pnpm build')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
+        const pkg = await fs.readJSON(path.resolve(process.cwd(), 'package.json')).catch(() => ({ version: '0.0.0' }));
+
+        // Generate tracking ID (random 6 chars)
+        const trackingId = Math.random().toString(36).substring(2, 8);
+        const version = pkg.version || '0.0.0';
 
         if (opts.build) {
             console.log(chalk.blue('Installing and building locally (pnpm install && pnpm build)...'));
@@ -58,7 +60,10 @@ const cmd = new Command('deploy')
         }
 
         console.log(chalk.blue('Packaging release...'));
-        const archivePath = await createReleaseArchive(cfg);
+
+        // Create archive with new naming convention: appName-vVersion-TrackingId.tar.gz
+        const archiveName = `${cfg.app.name}-v${version}-${trackingId}.tar.gz`;
+        const archivePath = await createReleaseArchive(cfg, archiveName);
         console.log(chalk.green(`Archive created: ${archivePath}`));
 
         console.log(chalk.blue(`Connecting to ${cfg.server.user}@${cfg.server.host}`));
@@ -86,7 +91,9 @@ const cmd = new Command('deploy')
 
         console.log(chalk.blue('Triggering remote release.sh'));
 
-        // THE FIX IS HERE — using full absolute path for archive
+        // Pass the archive name (without extension) as the release folder name if needed, 
+        // but release.sh currently handles extraction to a temp folder. 
+        // We will pass the full archive path as before.
         const cmdStr = `bash /opt/ship-next/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}"`;
 
         console.log(chalk.magenta('---------------------------------------------------'));
@@ -100,7 +107,8 @@ const cmd = new Command('deploy')
 
         console.log(chalk.magenta('---------------------------------------------------'));
 
-        console.log(chalk.green('Deploy finished.'));
+        console.log(chalk.green('Deploy finished successfully!'));
+        console.log(chalk.cyanBright(`\nYour app is live at: https://${cfg.app.name}\n`));
 
         ssh.dispose();
         await fs.remove(archivePath).catch(() => { });
