@@ -124,10 +124,10 @@ const cmd = new Command('rollback')
         console.log(chalk.blue(`Rolling back to: ${targetRelease}`));
 
         // upload rollback script if missing
-        await ssh.putFile(rollbackLocal, '/opt/ship-next/rollback.sh');
-        await ssh.execCommand('chmod +x /opt/ship-next/rollback.sh');
+        await ssh.putFile(rollbackLocal, '/opt/dargo/rollback.sh');
+        await ssh.execCommand('chmod +x /opt/dargo/rollback.sh');
 
-        const cmdStr = `bash /opt/ship-next/rollback.sh "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${targetRelease}"`;
+        const cmdStr = `bash /opt/dargo/rollback.sh "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${targetRelease}"`;
 
         console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.magenta(' STARTING ROLLBACK '));

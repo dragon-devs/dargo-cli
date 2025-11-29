@@ -25,6 +25,18 @@ async function createReleaseArchive(cfg, archiveName) {
 
         const standalone = path.join(process.cwd(), '.next', 'standalone');
 
+        // Clean up .next/dev and .next/cache before archiving
+        const nextDevPath = path.join(process.cwd(), '.next', 'dev');
+        const nextCachePath = path.join(process.cwd(), '.next', 'cache');
+
+        if (await fs.pathExists(nextDevPath)) {
+            await fs.remove(nextDevPath);
+        }
+
+        if (await fs.pathExists(nextCachePath)) {
+            await fs.remove(nextCachePath);
+        }
+
         if (await fs.pathExists(standalone)) {
             archive.directory(standalone, false);
             if (await fs.pathExists('public')) archive.directory('public', 'public');
@@ -86,15 +98,15 @@ const cmd = new Command('deploy')
         const __dirname = path.dirname(fileURLToPath(import.meta.url));
         const localReleaseScript = path.join(__dirname, '../../templates/release.sh');
 
-        await ssh.putFile(localReleaseScript, '/opt/ship-next/release.sh');
-        await ssh.execCommand('chmod +x /opt/ship-next/release.sh');
+        await ssh.putFile(localReleaseScript, '/opt/dargo/release.sh');
+        await ssh.execCommand('chmod +x /opt/dargo/release.sh');
 
         console.log(chalk.blue('Triggering remote release.sh'));
 
         // Pass the archive name (without extension) as the release folder name if needed, 
         // but release.sh currently handles extraction to a temp folder. 
         // We will pass the full archive path as before.
-        const cmdStr = `bash /opt/ship-next/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}"`;
+        const cmdStr = `bash /opt/dargo/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}"`;
 
         console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.magenta(' STARTING REMOTE RELEASE '));
