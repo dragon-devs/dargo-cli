@@ -3,6 +3,7 @@ APP="$1"
 DEPLOY_PATH="$2"
 PORT="$3"
 FORCE="$4"   # "force" or "no-force"
+EMAIL="$5"
 
 # If force mode: wipe nginx + ecosystem + deploy structure
 if [ "$FORCE" = "force" ]; then
@@ -40,6 +41,12 @@ fi
 if ! command -v nginx >/dev/null 2>&1; then
   sudo apt update
   sudo apt install -y nginx
+fi
+
+# install certbot
+if ! command -v certbot >/dev/null 2>&1; then
+  sudo apt update
+  sudo apt install -y certbot python3-certbot-nginx
 fi
 
 # create a basic ecosystem file in shared if not exists
@@ -85,6 +92,18 @@ EOF
   sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${APP}"
   sudo rm -f /etc/nginx/sites-enabled/default || true
   sudo nginx -t && sudo systemctl reload nginx || true
+fi
+
+# Setup SSL with Certbot
+if command -v certbot >/dev/null 2>&1; then
+  echo "Setting up SSL for $APP..."
+  
+  EMAIL_ARG="--register-unsafely-without-email"
+  if [ -n "$EMAIL" ]; then
+    EMAIL_ARG="-m $EMAIL"
+  fi
+
+  sudo certbot --nginx -d "$APP" --non-interactive --agree-tos --redirect $EMAIL_ARG || echo "Certbot failed. Ensure DNS points to this server."
 fi
 
 echo "Provision completed for ${APP} at ${DEPLOY_PATH}"

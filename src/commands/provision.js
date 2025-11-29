@@ -44,9 +44,10 @@ const cmd = new Command('provision')
         await ssh.execCommand('chmod +x /opt/ship-next/provision.sh');
 
         const forceFlag = opts.force ? 'force' : 'no-force';
+        const email = cfg.app.email || '';
         console.log(chalk.blue('Running remote provision.sh (requires sudo).'));
         const res = await ssh.execCommand(
-            `bash /opt/ship-next/provision.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.port} ${forceFlag}`
+            `bash /opt/ship-next/provision.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.port} ${forceFlag} "${email}"`
         );
         console.log(res.stdout);
         console.error(res.stderr);

@@ -14,7 +14,8 @@ const sample = {
         name: "app.yourdomain.com",
         deployPath: "/var/www/app.yourdomain.com",
         pm2AppName: "app.yourdomain.com",
-        port: 3000
+        port: 3000,
+        email: "admin@yourdomain.com"
     },
     keepReleases: 3
 };
