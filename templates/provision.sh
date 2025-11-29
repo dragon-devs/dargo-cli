@@ -39,14 +39,27 @@ fi
 
 # install nginx
 if ! command -v nginx >/dev/null 2>&1; then
-  sudo apt update
-  sudo apt install -y nginx
+  sudo apt-get update
+  sudo apt-get install -y nginx
+fi
+
+# setup UFW firewall
+if ! command -v ufw >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y ufw
+fi
+
+if command -v ufw >/dev/null 2>&1; then
+  echo "Configuring UFW firewall..."
+  sudo ufw allow OpenSSH
+  sudo ufw allow 'Nginx Full'
+  sudo ufw --force enable
 fi
 
 # install certbot
 if ! command -v certbot >/dev/null 2>&1; then
-  sudo apt update
-  sudo apt install -y certbot python3-certbot-nginx
+  sudo apt-get update
+  sudo apt-get install -y certbot python3-certbot-nginx
 fi
 
 # create a basic ecosystem file in shared if not exists
@@ -103,7 +116,12 @@ if command -v certbot >/dev/null 2>&1; then
     EMAIL_ARG="-m $EMAIL"
   fi
 
-  sudo certbot --nginx -d "$APP" --non-interactive --agree-tos --redirect $EMAIL_ARG || echo "Certbot failed. Ensure DNS points to this server."
+  # Check if certificate already exists to avoid regeneration
+  if [ -d "/etc/letsencrypt/live/$APP" ]; then
+    echo "SSL certificate for $APP already exists. Skipping Certbot setup."
+  else
+    sudo certbot --nginx -d "$APP" --non-interactive --agree-tos --redirect $EMAIL_ARG || echo "Certbot failed. Ensure DNS points to this server."
+  fi
 fi
 
 echo "Provision completed for ${APP} at ${DEPLOY_PATH}"

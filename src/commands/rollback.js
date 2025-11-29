@@ -1,9 +1,9 @@
-import {Command} from 'commander';
+import { Command } from 'commander';
 import chalk from 'chalk';
-import {NodeSSH} from 'node-ssh';
-import {readConfig} from '../utils/config.js';
+import { NodeSSH } from 'node-ssh';
+import { readConfig } from '../utils/config.js';
 import fs from 'fs-extra';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import path from 'path';
 
 const ssh = new NodeSSH();
@@ -28,9 +28,17 @@ const cmd = new Command('rollback')
         await ssh.execCommand('chmod +x /opt/ship-next/rollback.sh');
 
         const cmdStr = `bash /opt/ship-next/rollback.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.pm2AppName}`;
-        const res = await ssh.execCommand(cmdStr);
-        console.log(res.stdout);
-        console.error(res.stderr);
+
+        console.log(chalk.magenta('---------------------------------------------------'));
+        console.log(chalk.magenta(' STARTING ROLLBACK '));
+        console.log(chalk.magenta('---------------------------------------------------'));
+
+        await ssh.execCommand(cmdStr, {
+            onStdout: (chunk) => process.stdout.write(chunk.toString('utf8')),
+            onStderr: (chunk) => process.stderr.write(chunk.toString('utf8'))
+        });
+
+        console.log(chalk.magenta('---------------------------------------------------'));
         ssh.dispose();
     });
 

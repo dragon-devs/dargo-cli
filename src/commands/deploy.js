@@ -89,15 +89,21 @@ const cmd = new Command('deploy')
         // THE FIX IS HERE — using full absolute path for archive
         const cmdStr = `bash /opt/ship-next/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}"`;
 
-        const result = await ssh.execCommand(cmdStr);
+        console.log(chalk.magenta('---------------------------------------------------'));
+        console.log(chalk.magenta(' STARTING REMOTE RELEASE '));
+        console.log(chalk.magenta('---------------------------------------------------'));
 
-        console.log(result.stdout);
-        console.error(result.stderr);
+        await ssh.execCommand(cmdStr, {
+            onStdout: (chunk) => process.stdout.write(chunk.toString('utf8')),
+            onStderr: (chunk) => process.stderr.write(chunk.toString('utf8'))
+        });
+
+        console.log(chalk.magenta('---------------------------------------------------'));
 
         console.log(chalk.green('Deploy finished.'));
 
         ssh.dispose();
-        await fs.remove(archivePath).catch(() => {});
+        await fs.remove(archivePath).catch(() => { });
     });
 
 export default cmd;

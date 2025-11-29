@@ -45,13 +45,21 @@ const cmd = new Command('provision')
 
         const forceFlag = opts.force ? 'force' : 'no-force';
         const email = cfg.app.email || '';
-        console.log(chalk.blue('Running remote provision.sh (requires sudo).'));
-        const res = await ssh.execCommand(
-            `bash /opt/ship-next/provision.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.port} ${forceFlag} "${email}"`
-        );
-        console.log(res.stdout);
-        console.error(res.stderr);
 
+        console.log(chalk.magenta('---------------------------------------------------'));
+        console.log(chalk.magenta(' STARTING PROVISIONING '));
+        console.log(chalk.magenta('---------------------------------------------------'));
+
+        console.log(chalk.blue('Running remote provision.sh (requires sudo).'));
+        await ssh.execCommand(
+            `bash /opt/ship-next/provision.sh ${cfg.app.name} ${cfg.app.deployPath} ${cfg.app.port} ${forceFlag} "${email}"`,
+            {
+                onStdout: (chunk) => process.stdout.write(chunk.toString('utf8')),
+                onStderr: (chunk) => process.stderr.write(chunk.toString('utf8'))
+            }
+        );
+
+        console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.green('Provision complete. Verify server manually if necessary.'));
         ssh.dispose();
     });
