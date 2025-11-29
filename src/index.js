@@ -7,6 +7,7 @@ import logsCmd from './commands/logs.js';
 import envCmd from './commands/env.js';
 import statusCmd from './commands/status.js';
 import restartCmd from './commands/restart.js';
+import sshCmd from './commands/ssh.js';
 
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
@@ -14,8 +15,8 @@ const pkg = require('../package.json');
 
 
 program
-    .name('ship-next')
-    .description('ship-next — lightweight Next.js -> Debian deployer')
+    .name('dargo')
+    .description('dargo — lightning-fast Next.js -> VPS deployer')
     .version(pkg.version);
 
 program.addCommand(initCmd);
@@ -26,5 +27,6 @@ program.addCommand(logsCmd);
 program.addCommand(envCmd);
 program.addCommand(statusCmd);
 program.addCommand(restartCmd);
+program.addCommand(sshCmd);
 
 program.parse(process.argv);

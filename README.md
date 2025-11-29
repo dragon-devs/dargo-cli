@@ -150,6 +150,16 @@ Check the current status of your app on the server.
 #### `ship-next restart`
 Restart your app on the server (useful after env changes).
 
+#### `ship-next ssh`
+Connect directly to your server via SSH using the credentials from your config file.
+
+**Example:**
+```bash
+ship-next ssh
+```
+
+This opens an interactive SSH session. Type `exit` to disconnect.
+
 ## Architecture
 
 ### Directory Structure on Server
