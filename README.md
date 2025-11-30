@@ -18,9 +18,9 @@ A powerful, minimalist deployment tool for Next.js applications to Debian-based 
 ## Installation
 
 ```bash
-npm install -g dargo
+npm install -g dargo-cli
 # or
-pnpm add -g dargo
+pnpm add -g dargo-cli
 ```
 
 ## Quick Start
