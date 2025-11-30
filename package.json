@@ -1,6 +1,6 @@
 {
-  "name": "dargo",
-  "version": "1.0.0",
+  "name": "dargo-cli",
+  "version": "0.0.1",
   "description": "Lightning-fast Next.js deployment tool for VPS with automatic SSL",
   "type": "module",
   "main": "index.js",
@@ -10,10 +10,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["nextjs", "deploy", "deployment", "dargo-cli", "vps", "ssl", "pm2", "nginx", "dragondevs", "deployer nextjs", "easy nextjs deployer"],
   "author": "Salman Khan",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.22.0",
+  "files": [
+    "bin",
+    "src",
+    "index.js",
+    "dist"
+  ],
   "dependencies": {
     "archiver": "^7.0.1",
     "chalk": "^5.6.2",

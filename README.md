@@ -1,4 +1,4 @@
-# dargo
+# dargo-cli
 
 > **Lightning-fast Next.js deployment to any VPS** - One command to ship with SSL, zero-downtime, and automatic rollbacks.
 
@@ -261,10 +261,6 @@ dargo provision --force
 - **Server**: Debian-based Linux (Ubuntu, Debian)
 - **SSH**: SSH access with key-based authentication
 
-## License
-
-ISC
 
 ## Author
-
-Salman Khan by dragondevs.co
+Salman Khan 
