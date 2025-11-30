@@ -1,6 +1,6 @@
 {
   "name": "dargo-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lightning-fast Next.js deployment tool for VPS with automatic SSL",
   "type": "module",
   "main": "index.js",
