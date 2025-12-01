@@ -1,19 +1,30 @@
 # dargo-cli
 
-> **Lightning-fast Next.js deployment to any VPS** - One command to ship with SSL, zero-downtime, and automatic rollbacks.
+[![npm version](https://img.shields.io/npm/v/dargo-cli)]()
+[![npm downloads](https://img.shields.io/npm/dm/dargo-cli)]()
+[![GitHub stars](https://img.shields.io/github/stars/dragon-devs/dargo-cli)]()
+[![License](https://img.shields.io/github/license/dragon-devs/dargo-cli)]()
 
-A powerful, minimalist deployment tool for Next.js applications to Debian-based VPS servers with automatic SSL, environment management, and zero-downtime deployments.
+> **Lightning-fast Next.js deployment to any VPS** — One-command shipping with SSL, zero downtime, rollbacks, environment sync, and full autopilot server provisioning.
 
-## Features
+A powerful, production-grade deployment tool for Next.js applications targeting Debian-based VPS servers. Designed for builders who want modern DevOps capabilities without the DevOps overhead.
 
-✨ **One-command deployment** - Deploy your Next.js app with a single command  
-🔒 **Automatic SSL** - Let's Encrypt SSL certificates configured automatically  
-🔥 **Zero-downtime** - Rolling deployments with automatic rollback capability  
-🚀 **Fast deployments** - Uses pnpm for lightning-fast package installation  
-🔐 **Firewall setup** - UFW firewall configured automatically  
-📦 **Version tracking** - Each deployment tagged with version and tracking ID  
-🌍 **Environment management** - Push/pull .env files easily  
-📊 **Server monitoring** - View logs, status, and restart your app remotely  
+---
+
+## Key Features
+
+✨ **One-command deployment** — Ship instantly with `dargo deploy`  
+🔒 **Automatic SSL** — Full Let's Encrypt integration  
+🔥 **Zero‑downtime** — Atomic symlink switching with rollback safety  
+🚀 **Ultra-fast deployments** — pnpm-powered, optimized build flow  
+🛡️ **Security-first** — Automatic UFW firewall rules + key-based SSH  
+📦 **Release management** — Versioned releases with cleanup  
+🌍 **Environment sync** — Push/pull .env files seamlessly  
+📊 **Observability** — Logs, status, restart, and SSH built-in  
+🔧 **Full provisioning** — Node.js 24, Nginx, PM2, SSL, firewall  
+📁 **Capistrano-style structure** — Industry-standard deployment layout  
+
+---
 
 ## Installation
 
@@ -23,20 +34,22 @@ npm install -g dargo-cli
 pnpm add -g dargo-cli
 ```
 
+---
+
 ## Quick Start
 
-### 1. Initialize Configuration
+### 1. Create Config
 
 ```bash
 dargo init
 ```
 
-This creates a `dargo.config.json` file. Edit it with your server details:
+This generates `dargo.config.json`:
 
 ```json
 {
   "server": {
-    "host": "your.server.ip.or.host",
+    "host": "your.server.ip",
     "port": 22,
     "user": "admin",
     "pem": "./keys/your.pem"
@@ -52,215 +65,136 @@ This creates a `dargo.config.json` file. Edit it with your server details:
 }
 ```
 
-### 2. Provision Your Server
+---
 
-Run this once to set up your server with Node.js, PM2, Nginx, SSL, and firewall:
+### 2. Provision the VPS
 
 ```bash
 dargo provision
 ```
 
-This will:
-- Install Node.js 24, PM2, pnpm, Nginx, Certbot, and UFW
-- Configure firewall (allow SSH and HTTP/HTTPS)
-- Set up SSL certificate with Let's Encrypt
-- Create deployment directory structure
+Installs:
 
-### 3. Set Up Environment Variables
+- Node.js 24  
+- PM2  
+- pnpm  
+- Nginx  
+- SSL (Let's Encrypt)  
+- UFW firewall  
+- Deployment directory structure  
 
-Create a `.env.production` file locally, then push it to the server:
+---
+
+### 3. Sync Environment Variables
 
 ```bash
 dargo env push
 ```
 
-### 4. Deploy Your App
+---
+
+### 4. Deploy
 
 ```bash
 dargo deploy
 ```
 
-This will:
-- Build your Next.js app locally
-- Create a versioned archive (e.g., `myapp-v1.0.0-x7z9q2.tar.gz`)
-- Upload to server
-- Install production dependencies with pnpm
-- Link environment variables
-- Restart the app with PM2
-- Clean up old releases (keeps last 3 by default)
+---
 
-## Commands
+## Commands Overview
 
-### Core Commands
+### Core
 
-#### `dargo init`
-Create a configuration file in the current directory.
+| Command | Description |
+|--------|-------------|
+| `dargo init` | Create config |
+| `dargo provision` | Bootstrap the server |
+| `dargo deploy` | Build + deploy |
+| `dargo rollback` | Revert to a previous release |
 
-#### `dargo provision [options]`
-Bootstrap your Debian server (run once).
+### Management
 
-**Options:**
-- `-f, --force` - Force overwrite of nginx, ecosystem, and deploy structure
+| Command | Description |
+|--------|-------------|
+| `dargo env push/pull` | Manage .env.production files |
+| `dargo logs` | Stream PM2 logs |
+| `dargo status` | Check app status |
+| `dargo restart` | Restart app |
+| `dargo ssh` | SSH directly |
 
-#### `dargo deploy [options]`
-Build and deploy your Next.js app.
+---
 
-**Options:**
-- `--no-build` - Skip running pnpm build (use existing build)
-
-#### `dargo rollback`
-Interactive rollback to a previous release. Shows a list of available releases to choose from.
-
-### Management Commands
-
-#### `dargo env <action> [options]`
-Manage environment variables on the server.
-
-**Actions:**
-- `push` - Upload local .env.production to server
-- `pull` - Download server .env to .env.remote locally
-
-**Options:**
-- `-f, --file <path>` - Local env file to push (default: .env.production)
-
-**Examples:**
-```bash
-# Push .env.production to server
-dargo env push
-
-# Push a different file
-dargo env push -f .env.staging
-
-# Pull server env to local file
-dargo env pull
-```
-
-#### `dargo logs [options]`
-View PM2 logs from the server.
-
-**Options:**
-- `-n, --lines <number>` - Number of lines to show (default: 100)
-
-**Example:**
-```bash
-dargo logs -n 200
-```
-
-#### `dargo status`
-Check the current status of your app on the server.
-
-#### `dargo restart`
-Restart your app on the server (useful after env changes).
-
-#### `dargo ssh`
-Connect directly to your server via SSH using the credentials from your config file.
-
-**Example:**
-```bash
-dargo ssh
-```
-
-This opens an interactive SSH session. Type `exit` to disconnect.
-
-## Architecture
-
-### Directory Structure on Server
+## Server Architecture
 
 ```
-/var/www/your-app/
-├── current -> releases/your-app-v1.0.0-abc123/  (symlink to active release)
+/var/www/app/
+├── current -> releases/app-v1.0.0-abc123/
 ├── releases/
-│   ├── your-app-v1.0.0-abc123/
-│   ├── your-app-v0.9.0-xyz789/
-│   └── your-app-v0.8.0-def456/
+│   ├── app-v1.0.0-abc123/
+│   ├── app-v0.9.0-xyz789/
 └── shared/
     ├── .env
     └── ecosystem.config.js
 ```
 
-**How the `current` Symlink Works:**
-- Your app **always runs from `/current`**, which is a symbolic link
-- During deployment, we create a new release directory, then atomically update the symlink
-- This is the industry-standard approach (used by Capistrano, Deployer, etc.)
-- **Why it's stable:**
-  - Symlink updates are atomic operations (all-or-nothing)
-  - PM2 tracks the process, not the directory path
-  - Old version keeps running until PM2 restarts
-  - If anything fails, the old symlink remains intact
+**Why it’s stable:**  
+- Atomic symlink switches  
+- Old version stays active until PM2 restart  
+- Rollbacks are instant  
+- Identical to patterns used by Capistrano, Laravel Forge, Deployer  
 
-### How It Works
+---
 
-1. **Provision**: Sets up the server infrastructure
-2. **Deploy**: 
-   - Builds locally
-   - Creates versioned archive
-   - Uploads to server
-   - Extracts to new release directory
-   - Installs dependencies with pnpm
-   - Links shared .env file
-   - Updates `current` symlink
-   - Restarts PM2
-   - Cleans old releases
-3. **Rollback**: Updates `current` symlink to previous release and restarts
+## Versioning
 
-## Version Tracking
+Release naming:
 
-Each deployment creates an archive named with:
-- App name
-- Version from package.json
-- Random tracking ID
-
-Example: `myapp-v1.2.3-x7z9q2.tar.gz`
-
-This makes it easy to identify and rollback to specific versions.
-
-## SSL & Security
-
-- **Automatic SSL**: Let's Encrypt certificates are automatically obtained and configured
-- **Auto-renewal**: Certbot handles certificate renewal automatically
-- **Firewall**: UFW is configured to allow only SSH and HTTP/HTTPS traffic
-- **Idempotent**: Running provision multiple times is safe - it won't regenerate SSL certs
-
-## Environment Variables
-
-Environment variables are stored in `/var/www/your-app/shared/.env` and symlinked to each release. This means:
-- Env vars persist across deployments
-- You can update them without redeploying
-- Use `dargo env push` to update and `dargo restart` to apply changes
-
-## Troubleshooting
-
-### View logs
-```bash
-dargo logs
+```
+{name}-v{package.json version}-{randomId}.tar.gz
 ```
 
-### Check app status
-```bash
-dargo status
+Example:
+
+```
+myapp-v1.2.3-x7z9q2.tar.gz
 ```
 
-### Restart app
-```bash
-dargo restart
-```
-
-### Rollback to previous version
-```bash
-dargo rollback
-```
-
-### Re-provision server
-```bash
-dargo provision --force
-```
+---
 
 ## Requirements
 
-- **Local**: Node.js 18+, pnpm (optional, npm works too)
-- **Server**: Debian-based Linux (Ubuntu, Debian)
-- **SSH**: SSH access with key-based authentication
+### Local
+- Node.js 18+
+- pnpm (recommended)
+- SSH key auth
+
+### Server
+- Debian / Ubuntu VPS
+- Root or sudo access
+
+---
+
+## Troubleshooting
+
+```bash
+dargo logs
+dargo status
+dargo restart
+dargo rollback
+dargo provision --force
+```
+
+---
+
+## Contributing
+
+Please read the [Contributing Guide](https://github.com/dragon-devs/dargo-cli/blob/main/CONTRIBUTING.md) for contribution standards, issue templates, branching rules, and testing workflow.
 
 
-## Author
-Salman Khan 
+Star the repo to support ongoing development.
+
+---
+
+## Author  
+Salman Khan  
+`dargo-cli` by dragondevs
