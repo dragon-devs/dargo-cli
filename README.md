@@ -134,7 +134,7 @@ If you encounter issues with dependency installation (e.g., peer dependency conf
    ```
 
 #### Automatic Optimization
-- **Memory Cleanup**: Both `provision` and `deploy` commands now automatically clear system caches (RAM) and package manager caches to ensure optimal performance, especially on smaller instances (e.g., t2.micro).
+- **Memory Cleanup**: Both `provision` and `deploy` commands now automatically clear system caches (RAM) and package manager caches to ensure optimal performance, especially on smaller instances.
 - **Service Refresh**: Redeployments automatically reload/restart Nginx to ensure configuration changes take effect immediately.
 
 ### Management
