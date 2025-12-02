@@ -9,6 +9,7 @@ import ora from 'ora';
 import { readConfig } from '../utils/config.js';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 const ssh = new NodeSSH();
 
@@ -65,12 +66,42 @@ const cmd = new Command('deploy')
         const version = pkg.version || '0.0.0';
 
         if (opts.build) {
-            const buildSpinner = ora('Installing dependencies...').start();
-            spawnSync('pnpm', ['install'], { stdio: 'inherit', shell: true });
+            // Detect package manager
+            let pm = 'npm';
+            const hasPnpmLock = await fs.pathExists(path.resolve(process.cwd(), 'pnpm-lock.yaml'));
+
+            if (hasPnpmLock) {
+                const pnpmCheck = spawnSync('pnpm', ['--version'], { shell: true });
+                if (pnpmCheck.status === 0) {
+                    pm = 'pnpm';
+                } else {
+                    console.warn(chalk.yellow('⚠ pnpm-lock.yaml found but pnpm not installed. Falling back to npm.'));
+                }
+            }
+
+            // Load .env.production
+            const envPath = path.resolve(process.cwd(), '.env.production');
+            if (await fs.pathExists(envPath)) {
+                dotenv.config({ path: envPath });
+                console.log(chalk.blue('ℹ Loaded .env.production for build'));
+            } else {
+                console.log(chalk.red.bold('\n⚠ CRITICAL: No .env.production file found!'));
+                console.log(chalk.yellow('  Your production build might fail or lack necessary configuration.'));
+                console.log(chalk.yellow('  Please create .env.production with your production variables (DB_URL, API_KEYS, etc).\n'));
+
+                // Optional: You could prompt to continue here, but for now we just warn loudly.
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Give them a moment to read it
+            }
+
+            const buildEnv = { ...process.env, NODE_ENV: 'production' };
+
+            const buildSpinner = ora(`Installing dependencies with ${pm}...`).start();
+            spawnSync(pm, ['install'], { stdio: 'inherit', shell: true, env: buildEnv });
             buildSpinner.succeed('Dependencies installed');
 
-            const compileSpinner = ora('Building Next.js application...').start();
-            spawnSync('pnpm', ['build'], { stdio: 'inherit', shell: true });
+            const compileSpinner = ora(`Building Next.js application with ${pm}...`).start();
+            // npm run build / pnpm run build
+            spawnSync(pm, ['run', 'build'], { stdio: 'inherit', shell: true, env: buildEnv });
             compileSpinner.succeed('Build completed');
         } else {
             console.log(chalk.yellow('⚠ Skipping build (--no-build).'));
