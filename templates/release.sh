@@ -6,6 +6,8 @@ APP_NAME="$2"
 DEPLOY_PATH="$3"
 PM2_NAME="$4"
 KEEP_RELEASES="$5"    # normally 3
+# $6 is PORT (unused here but passed by deploy.js)
+LEGACY_PEER_DEPS="${7:-false}"
 
 RELEASES_DIR="$DEPLOY_PATH/releases"
 CURRENT_SYMLINK="$DEPLOY_PATH/current"
@@ -38,7 +40,14 @@ if ! command -v pnpm >/dev/null 2>&1; then
     exit 1
 fi
 
-pnpm install --prod --frozen-lockfile=false
+INSTALL_CMD="pnpm install --prod --frozen-lockfile=false"
+
+if [ "$LEGACY_PEER_DEPS" = "true" ]; then
+    echo "Using legacy peer dependencies mode..."
+    INSTALL_CMD="$INSTALL_CMD --config.strict-peer-dependencies=false"
+fi
+
+$INSTALL_CMD
 
 # Promote temp folder into final release using the archive name
 FINAL_RELEASE="$RELEASES_DIR/${ARCHIVE_BASENAME}"
@@ -64,5 +73,13 @@ pm2 save
 echo "== Cleaning old releases (keeping $KEEP_RELEASES) =="
 cd "$RELEASES_DIR"
 ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
+
+echo "== Reloading Nginx =="
+sudo systemctl reload nginx || sudo systemctl restart nginx
+
+echo "== Clearing memory and package caches =="
+sudo apt-get clean
+sudo sync
+echo 3 | sudo tee /proc/sys/vm/drop_caches
 
 echo "== Deploy finished =="

@@ -109,8 +109,33 @@ dargo deploy
 |--------|-------------|
 | `dargo init` | Create config |
 | `dargo provision` | Bootstrap the server |
-| `dargo deploy` | Build + deploy |
+| `dargo deploy` | Build + deploy (supports `--legacy-peer-deps`) |
 | `dargo rollback` | Revert to a previous release |
+
+### Advanced Usage
+#### Dependency Management
+If you encounter issues with dependency installation (e.g., peer dependency conflicts), you have several options:
+
+1. **Legacy Peer Deps (Local + Remote)**: Applies legacy behavior to both local build and remote server.
+   ```bash
+   dargo deploy --legacy-peer-deps
+   ```
+
+2. **Remote Only**: Applies legacy behavior *only* to the remote server. Use this if your local build works fine but the server needs the flag.
+   ```bash
+   dargo deploy --remote-legacy-peer-deps
+   ```
+
+3. **Skip Local Install**: If you have already installed dependencies locally and want to avoid Dargo reinstalling them (which might break things), use `--no-install`.
+   ```bash
+   dargo deploy --no-install
+   # or combine with remote legacy flag
+   dargo deploy --no-install --remote-legacy-peer-deps
+   ```
+
+#### Automatic Optimization
+- **Memory Cleanup**: Both `provision` and `deploy` commands now automatically clear system caches (RAM) and package manager caches to ensure optimal performance, especially on smaller instances (e.g., t2.micro).
+- **Service Refresh**: Redeployments automatically reload/restart Nginx to ensure configuration changes take effect immediately.
 
 ### Management
 

@@ -57,6 +57,9 @@ const cmd = new Command('deploy')
     .description('Build local Next.js and deploy to configured server')
     .option('-c, --config <path>', 'path to dargo.config.json', 'dargo.config.json')
     .option('--no-build', 'skip running pnpm build')
+    .option('--no-install', 'skip local dependency installation')
+    .option('--legacy-peer-deps', 'install dependencies with legacy peer deps behavior (local + remote)')
+    .option('--remote-legacy-peer-deps', 'install dependencies with legacy peer deps behavior (remote only)')
     .action(async (opts) => {
         const cfg = readConfig(opts.config);
         const pkg = await fs.readJSON(path.resolve(process.cwd(), 'package.json')).catch(() => ({ version: '0.0.0' }));
@@ -95,9 +98,23 @@ const cmd = new Command('deploy')
 
             const buildEnv = { ...process.env, NODE_ENV: 'production' };
 
-            const buildSpinner = ora(`Installing dependencies with ${pm}...`).start();
-            spawnSync(pm, ['install'], { stdio: 'inherit', shell: true, env: buildEnv });
-            buildSpinner.succeed('Dependencies installed');
+            if (opts.install) {
+                const installArgs = ['install'];
+
+                if (opts.legacyPeerDeps) {
+                    if (pm === 'npm') {
+                        installArgs.push('--legacy-peer-deps');
+                    } else if (pm === 'pnpm') {
+                        installArgs.push('--config.strict-peer-dependencies=false');
+                    }
+                }
+
+                const buildSpinner = ora(`Installing dependencies with ${pm}...`).start();
+                spawnSync(pm, installArgs, { stdio: 'inherit', shell: true, env: buildEnv });
+                buildSpinner.succeed('Dependencies installed');
+            } else {
+                console.log(chalk.yellow('⚠ Skipping install (--no-install). Using existing node_modules.'));
+            }
 
             const compileSpinner = ora(`Building Next.js application with ${pm}...`).start();
             // npm run build / pnpm run build
@@ -149,7 +166,8 @@ const cmd = new Command('deploy')
         // Pass the archive name (without extension) as the release folder name if needed, 
         // but release.sh currently handles extraction to a temp folder. 
         // We will pass the full archive path as before.
-        const cmdStr = `bash /opt/dargo/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}"`;
+        const legacyFlag = (opts.legacyPeerDeps || opts.remoteLegacyPeerDeps) ? 'true' : 'false';
+        const cmdStr = `bash /opt/dargo/release.sh "${remoteArchive}" "${cfg.app.name}" "${cfg.app.deployPath}" "${cfg.app.pm2AppName}" "${cfg.keepReleases || 3}" "${cfg.app.port}" "${legacyFlag}"`;
 
         console.log(chalk.magenta('---------------------------------------------------'));
         console.log(chalk.magenta(' STARTING REMOTE RELEASE '));

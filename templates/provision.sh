@@ -128,4 +128,10 @@ if command -v certbot >/dev/null 2>&1; then
   fi
 fi
 
+# Clear memory cache and package manager cache
+echo "Clearing memory and package caches..."
+sudo apt-get clean
+sudo sync
+echo 3 | sudo tee /proc/sys/vm/drop_caches
+
 echo "Provision completed for ${APP} at ${DEPLOY_PATH}"
