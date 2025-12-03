@@ -182,12 +182,15 @@ const cmd = new Command('deploy')
 
         const successSpinner = ora().start();
         successSpinner.succeed(chalk.green.bold('Deploy finished successfully!'));
+
         console.log(chalk.cyanBright(`\n🚀 Your app is live at: https://${cfg.app.name}\n`));
 
         const cleanupSpinner = ora('Cleaning up local files...').start();
         ssh.dispose();
         await fs.remove(archivePath).catch(() => { });
         cleanupSpinner.succeed('Cleanup completed');
+
+        console.log(chalk.yellow('\n⭐ If this saved your time, consider starring dargo-cli on GitHub: github.com/dragon-devs/dargo-cli\n'));
     });
 
 export default cmd;

@@ -17,11 +17,14 @@
     "dargo-cli",
     "vps",
     "ssl",
-    "pm2",
+    "automatic deploy cli",
+    "automation",
     "nginx",
     "dragondevs",
     "deployer nextjs",
-    "easy nextjs deployer"
+    "easy nextjs deployer",
+    "nextjs deploy cli",
+    "nextjs vps deploy"
   ],
   "author": "Salman Khan",
   "license": "MIT",
